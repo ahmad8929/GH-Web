@@ -1,6 +1,36 @@
 import Link from "next/link";
 
-import { footerColumns } from "@/data/marketplace";
+const footerColumns = [
+  {
+    title: "Shop",
+    links: [
+      { href: "/marketplace", label: "All items" },
+      { href: "/textbooks", label: "Old books" },
+      { href: "/uniforms", label: "Uniforms" },
+      { href: "/stationery", label: "Stationery" },
+      { href: "/custom-notebook", label: "Custom notebook" },
+    ],
+  },
+  {
+    title: "Community",
+    links: [
+      { href: "/sell", label: "Sell your items" },
+      { href: "/donate", label: "Donate" },
+      { href: "/schools", label: "Schools" },
+      { href: "/blogs", label: "Blog" },
+      { href: "/advertise", label: "Advertise with us" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { href: "/about", label: "About us" },
+      { href: "/contact", label: "Contact us" },
+      { href: "/privacy-policy", label: "Privacy policy" },
+      { href: "/terms-and-conditions", label: "Terms and conditions" },
+    ],
+  },
+];
 
 export function SiteFooter() {
   return (
@@ -8,10 +38,10 @@ export function SiteFooter() {
       <div className="container site-footer__grid">
         <div className="footer-intro">
           <div className="brand-mark brand-mark--footer">
-            <span>G</span>
+            <span aria-hidden>G</span>
             <strong>Gyan Hub</strong>
           </div>
-          <p>Buy, reuse, donate.</p>
+          <p>The friendly school store — buy, reuse, donate.</p>
         </div>
 
         {footerColumns.map((column) => (

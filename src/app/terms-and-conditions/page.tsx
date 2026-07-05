@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms and conditions",
+  description:
+    "The rules for buying, selling, and donating on Gyan Hub.",
+};
+
 const termsSections = [
   {
     title: "Platform use",

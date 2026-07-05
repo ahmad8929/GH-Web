@@ -1,49 +1,59 @@
-import { PageHero } from "@/components/page-hero";
-import { ProductCard } from "@/components/product-card";
-import { SectionHeading } from "@/components/section-heading";
-import { featuredProducts, listingFilters } from "@/data/marketplace";
+import type { Metadata } from "next";
 
-export default function MarketplacePage() {
+import { Catalog } from "@/components/catalog";
+import { PageHero } from "@/components/page-hero";
+import { ListingsApi } from "@/lib/api/endpoints";
+import { safe } from "@/lib/api/http";
+import { getCategoryOptions, matchCategory } from "@/lib/categories";
+
+export const metadata: Metadata = {
+  title: "Marketplace — books, uniforms, stationery & more",
+  description:
+    "Browse the full Gyan Hub catalog: old and new books, uniforms, stationery, and donated school essentials. Search, filter, and save.",
+};
+
+export default async function MarketplacePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cat?: string; q?: string }>;
+}) {
+  const { cat, q } = await searchParams;
+  const categoryOptions = await getCategoryOptions();
+
+  // `?cat=` deep-links (e.g. New Books from the nav) preselect a category.
+  const preset = cat ? matchCategory(categoryOptions, cat) : undefined;
+
+  const initial = await safe(
+    ListingsApi.list(
+      {
+        limit: 12,
+        sort: "newest",
+        categoryId: preset?.id,
+        search: q || undefined,
+      },
+      { next: { revalidate: 60 } },
+    ),
+  );
+
   return (
     <div className="section-stack">
       <PageHero
         eyebrow="Marketplace"
         title="Find school essentials"
-        description="Search by school, class, category, and price."
+        description="Search and filter the live catalog — every item checked and approved by our team."
         primaryHref="/sell"
-        primaryLabel="Sell item"
-        secondaryHref="/favorites"
-        secondaryLabel="Saved"
+        primaryLabel="Sell an item"
+        secondaryHref="/donate"
+        secondaryLabel="Donate"
       />
-
-      <section className="panel">
-        <SectionHeading
-          eyebrow="Search"
-          title="Browse quickly"
-          description="Use a keyword or a simple filter."
-        />
-        <div className="market-search">
-          <div className="field">
-            <label htmlFor="search">Keyword</label>
-            <input id="search" placeholder="Book, blazer, calculator" />
-          </div>
-          <div className="filters-row">
-            {listingFilters.map((filter) => (
-              <span key={filter} className="filter-text">
-                {filter}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="section-stack">
-        <div className="product-grid">
-          {featuredProducts.map((product) => (
-            <ProductCard key={product.slug} product={product} />
-          ))}
-        </div>
-      </section>
+      <Catalog
+        initial={initial}
+        categoryOptions={categoryOptions}
+        initialFilters={{
+          categoryId: preset?.id ?? "",
+          search: q ?? "",
+        }}
+      />
     </div>
   );
 }

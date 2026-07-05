@@ -1,28 +1,46 @@
+import type { Metadata } from "next";
+
+import { Catalog } from "@/components/catalog";
 import { PageHero } from "@/components/page-hero";
-import { ProductCard } from "@/components/product-card";
-import { featuredProducts } from "@/data/marketplace";
+import { ListingsApi } from "@/lib/api/endpoints";
+import { safe } from "@/lib/api/http";
+import { getCategoryOptions, matchCategory } from "@/lib/categories";
 
-const uniformProducts = featuredProducts.filter(
-  (product) => product.portal === "Uniforms",
-);
+export const revalidate = 60;
 
-export default function UniformsPage() {
+export const metadata: Metadata = {
+  title: "Uniforms — school-approved sets & sizes",
+  description:
+    "School uniforms by school and size — new and gently used shirts, trousers, blazers, and full sets, checked and approved.",
+};
+
+export default async function UniformsPage() {
+  const categoryOptions = await getCategoryOptions();
+  const category = matchCategory(categoryOptions, "uniforms");
+
+  const initial = await safe(
+    ListingsApi.list(
+      { limit: 12, sort: "newest", categoryId: category?.id },
+      { next: { revalidate: 60 } },
+    ),
+  );
+
   return (
     <div className="section-stack">
       <PageHero
-        eyebrow="Used uniforms"
-        title="Old uniforms by school"
-        description="Find the right set fast."
+        eyebrow="Uniforms portal"
+        title="Uniforms that fit the school year"
+        description="Shirts, trousers, blazers, and full sets by school and size — new and gently used."
         primaryHref="/sell/uniforms"
-        primaryLabel="Sell uniforms"
-        secondaryHref="/schools"
-        secondaryLabel="Schools"
+        primaryLabel="Sell outgrown uniforms"
+        secondaryHref="/marketplace"
+        secondaryLabel="Browse everything"
       />
-      <div className="product-grid">
-        {uniformProducts.map((product) => (
-          <ProductCard key={product.slug} product={product} />
-        ))}
-      </div>
+      <Catalog
+        initial={initial}
+        categoryOptions={categoryOptions}
+        fixed={category ? { categoryId: category.id } : {}}
+      />
     </div>
   );
 }

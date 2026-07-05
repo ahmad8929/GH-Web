@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Contact us",
+  description:
+    "Questions, support, or partnerships — get in touch with the Gyan Hub team.",
+};
+
 export default function ContactPage() {
   return (
     <div className="section-stack">

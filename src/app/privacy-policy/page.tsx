@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy policy",
+  description: "What Gyan Hub collects and how we use and protect it.",
+};
+
 const privacySections = [
   {
     title: "Information we collect",

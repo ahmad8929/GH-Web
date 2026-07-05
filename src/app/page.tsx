@@ -1,172 +1,213 @@
 import Link from "next/link";
 
+import { AdSlot } from "@/components/ad-slot";
+import { EmptyState } from "@/components/empty-state";
 import { ProductCard } from "@/components/product-card";
 import { SectionHeading } from "@/components/section-heading";
-import { categories, featuredProducts, stats } from "@/data/marketplace";
+import { BlogsApi, ListingsApi } from "@/lib/api/endpoints";
+import { safe } from "@/lib/api/http";
+import { SHOP_CATEGORIES } from "@/lib/categories";
+import { formatDate } from "@/lib/format";
 
-export default function Home() {
+export const revalidate = 60;
+
+export default async function Home() {
+  // Live data, fetched in parallel; every call degrades to null gracefully.
+  const [featuredRes, newestRes, blogsRes] = await Promise.all([
+    safe(
+      ListingsApi.list(
+        { sort: "featured", limit: 3 },
+        { next: { revalidate: 60 } },
+      ),
+    ),
+    safe(
+      ListingsApi.list(
+        { sort: "newest", limit: 6 },
+        { next: { revalidate: 60 } },
+      ),
+    ),
+    BlogsApi.list(1),
+  ]);
+
+  const newest = newestRes?.data ?? [];
+  const featuredOnly = (featuredRes?.data ?? []).filter((l) => l.isFeatured);
+  const posts = (blogsRes?.data ?? []).slice(0, 3);
+
   return (
     <div className="section-stack">
       <section className="hero">
         <div className="hero__copy">
-          <span className="eyebrow">Campus reuse</span>
+          <span className="eyebrow">The friendly school store</span>
           <h1>School things, shared smarter.</h1>
-          <p className="lead">Books, uniforms, stationery, bags, and devices.</p>
+          <p className="lead">
+            Old books, new books, uniforms, stationery, and custom notebooks —
+            checked, approved, and priced for families.
+          </p>
           <div className="button-row">
             <Link href="/marketplace" className="button button--primary">
-              Shop
+              Shop the store
             </Link>
-            <Link href="/sell/books" className="button button--ghost">
-              Sell books
+            <Link href="/sell" className="button button--sun">
+              Sell your items
             </Link>
-          </div>
-          <div className="stat-grid">
-            {stats.map((stat) => (
-              <div key={stat.label} className="stat-card">
-                <strong>{stat.value}</strong>
-                <p>{stat.label}</p>
-              </div>
-            ))}
+            <Link href="/donate" className="button button--ghost">
+              Donate
+            </Link>
           </div>
         </div>
 
         <aside className="hero-card">
-          <span className="eyebrow">Start here</span>
-          <h3>Quick paths for the busiest categories.</h3>
+          <span className="eyebrow">Why Gyan Hub?</span>
+          <h3>Every item is checked before it goes live.</h3>
           <ul className="bullet-list">
-            <li>Used books</li>
-            <li>Used uniforms</li>
-            <li>Donation items</li>
-            <li>Fast local search</li>
+            <li>Quality-checked used books &amp; uniforms</li>
+            <li>Sell back or donate in minutes</li>
+            <li>Made-to-order custom notebooks</li>
           </ul>
           <div className="hero-card__strip">
             <div>
-              <strong>4</strong>
-              <span>roles</span>
+              <strong>5</strong>
+              <span>shop categories</span>
             </div>
             <div>
-              <strong>15+</strong>
-              <span>groups</span>
+              <strong>1</strong>
+              <span>friendly account</span>
             </div>
             <div>
-              <strong>3</strong>
-              <span>portals</span>
+              <strong>0</strong>
+              <span>wasted books</span>
             </div>
           </div>
         </aside>
       </section>
 
+      <AdSlot placement="home_top" />
+
       <section className="section" id="categories">
         <SectionHeading
           eyebrow="Categories"
           title="Shop by type"
-          description="Short. Clear. Fast."
+          description="Five ways in — pick yours."
         />
         <div className="category-grid">
-          {categories.map((category) => (
-            <article
+          {SHOP_CATEGORIES.map((category) => (
+            <Link
               key={category.slug}
+              href={category.href}
               className="category-card"
-              data-tone={category.accent}
+              data-tone={category.tone}
             >
-              <span className="icon-pill">{category.count}</span>
-              <h3>{category.name}</h3>
-              <p>{category.description}</p>
-              <Link
-                href={
-                  category.slug === "textbooks"
-                    ? "/textbooks"
-                    : category.slug === "uniforms"
-                      ? "/uniforms"
-                      : category.slug === "donation"
-                        ? "/donate"
-                        : "/marketplace"
-                }
-                className="text-link"
-              >
-                Open
-              </Link>
-            </article>
+              <span className="category-card__emoji" aria-hidden>
+                {category.emoji}
+              </span>
+              <h3>{category.label}</h3>
+              <p>{category.blurb}</p>
+              <span className="text-link text-link--strong">Open →</span>
+            </Link>
           ))}
         </div>
       </section>
 
-      <section className="section">
-        <SectionHeading
-          eyebrow="Popular"
-          title="Useful shortcuts"
-          description="Made for repeat needs."
-        />
-        <div className="portal-grid">
-          <article className="portal-card">
-            <span className="badge">Market</span>
-            <h3>All items</h3>
-            <p>Search everything.</p>
-            <Link href="/marketplace" className="button button--ghost">
-              Open
-            </Link>
-          </article>
-          <article className="portal-card">
-            <span className="badge">Old books</span>
-            <h3>Sell used books</h3>
-            <p>By class and subject.</p>
-            <Link href="/sell/books" className="button button--ghost">
-              Sell
-            </Link>
-          </article>
-          <article className="portal-card">
-            <span className="badge">Old uniforms</span>
-            <h3>Sell used uniforms</h3>
-            <p>By school and size.</p>
-            <Link href="/sell/uniforms" className="button button--ghost">
-              Sell
-            </Link>
-          </article>
-          <article className="portal-card">
-            <span className="badge">Donate</span>
-            <h3>Give items away</h3>
-            <p>Useful things stay useful.</p>
-            <Link href="/donate" className="button button--ghost">
-              Donate
-            </Link>
-          </article>
-        </div>
-      </section>
+      {featuredOnly.length ? (
+        <section className="section">
+          <SectionHeading
+            eyebrow="Featured"
+            title="Staff picks"
+            description="Hand-picked highlights from the store."
+          />
+          <div className="product-grid">
+            {featuredOnly.map((listing) => (
+              <ProductCard key={listing.id} listing={listing} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <AdSlot placement="home_mid" />
 
       <section className="section">
         <SectionHeading
-          eyebrow="Fresh listings"
-          title="New in the market"
-          description="A few live examples."
+          eyebrow="Fresh in"
+          title="New in the store"
+          description="The latest approved arrivals."
         />
-        <div className="product-grid">
-          {featuredProducts.map((product) => (
-            <ProductCard key={product.slug} product={product} />
-          ))}
-        </div>
+        {newest.length ? (
+          <div className="product-grid">
+            {newest.map((listing) => (
+              <ProductCard key={listing.id} listing={listing} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="The shelves are being stocked"
+            body="New items land here as soon as they're approved — check back in a bit!"
+            ctaHref="/sell"
+            ctaLabel="Be the first to sell"
+          />
+        )}
       </section>
+
+      {posts.length ? (
+        <section className="section">
+          <SectionHeading
+            eyebrow="From the blog"
+            title="School life, smarter"
+            description="Tips, guides, and community stories."
+          />
+          <div className="blog-grid">
+            {posts.map((post) => (
+              <article key={post.slug} className="blog-card">
+                <div className="blog-card__cover">
+                  {post.cover ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={post.cover} alt="" loading="lazy" />
+                  ) : (
+                    <span aria-hidden>📚</span>
+                  )}
+                </div>
+                <div className="blog-card__body">
+                  <span className="filter-text">
+                    {formatDate(post.publishedAt)}
+                  </span>
+                  <h3>
+                    <Link href={`/blogs/${post.slug}`}>{post.title}</Link>
+                  </h3>
+                  <p>{post.excerpt}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="section">
         <div className="story-grid">
           <article className="panel">
             <SectionHeading
-              eyebrow="Our goal"
-              title="Make school essentials more affordable"
-              description="We help families save money by making reuse simple, safe, and local."
+              eyebrow="Sell &amp; donate"
+              title="Outgrown things find new homes"
+              description="Submit used books and uniforms — we review, list, and handle the rest."
             />
-            <p className="muted-copy">
-              Books, uniforms, bags, and study tools should not be bought new every year if they are still useful.
-            </p>
+            <div className="button-row">
+              <Link href="/sell" className="button button--primary">
+                Start selling
+              </Link>
+              <Link href="/donate" className="button button--ghost">
+                Donate instead
+              </Link>
+            </div>
           </article>
           <article className="panel">
             <SectionHeading
-              eyebrow="About us"
-              title="Built for students and parents"
-              description="Gyan Hub connects school communities for buying, selling, and donation."
+              eyebrow="Custom notebooks"
+              title="A notebook that's all yours"
+              description="Pick the cover, ruling, and binding — and put your name on the front."
             />
-            <p className="muted-copy">
-              Our focus is trust, easy search, and less waste across the academic year.
-            </p>
+            <div className="button-row">
+              <Link href="/custom-notebook" className="button button--sun">
+                Start designing
+              </Link>
+            </div>
           </article>
         </div>
       </section>

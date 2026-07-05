@@ -1,4 +1,12 @@
+import type { Metadata } from "next";
+
 import { SectionHeading } from "@/components/section-heading";
+
+export const metadata: Metadata = {
+  title: "About us",
+  description:
+    "Gyan Hub is the friendly school store — built to reduce cost and waste for school families through reuse, donation, and fair prices.",
+};
 
 export default function AboutPage() {
   return (
