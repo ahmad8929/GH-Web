@@ -41,6 +41,11 @@
   --panel-deep-grad: linear-gradient(180deg, #1e56a0, #163172);
   --accent: #d6e4f0;           /* light tint — eyebrow / pill backgrounds */
 
+  /* theme-managed (see Theme Management — overridden per-user via theme-context.tsx) */
+  --button-bg: var(--primary);
+  --button-text: #ffffff;
+  --footer-bg: #163172;
+
   /* status */
   --ok: #1f9d6d;
   --ok-soft: rgba(31, 157, 109, 0.14);
@@ -92,6 +97,9 @@
     linear-gradient(180deg, rgba(63, 142, 216, 0.2), rgba(16, 32, 46, 0.2));
   --panel-deep-grad: linear-gradient(180deg, rgba(30, 86, 160, 0.95), rgba(22, 49, 114, 0.92));
   --accent: rgba(77, 134, 216, 0.22);
+  --button-bg: var(--primary);
+  --button-text: #ffffff;
+  --footer-bg: #0a1420;
 
   color-scheme: dark;
 }
@@ -335,8 +343,8 @@ img {
 }
 
 .button--primary {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: #fff;
+  background: var(--button-bg);
+  color: var(--button-text);
   box-shadow: var(--shadow-pop);
 }
 
@@ -1503,9 +1511,11 @@ li,
 }
 
 .ad-slot img {
+  display: block;
   width: 100%;
-  max-height: 160px;
+  height: 160px;
   object-fit: cover;
+  object-position: center top;
 }
 
 /* announcements (signed-in users only) */
@@ -1681,7 +1691,7 @@ li,
   margin-top: var(--space-5);
   padding: 2rem 0 2.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: #163172;
+  background: var(--footer-bg);
   color: rgba(255, 255, 255, 0.82);
 }
 
@@ -1925,9 +1935,9 @@ body::before {
   right: 0;
 }
 
-/* buttons: richer gradients + colored glow */
+/* buttons: colored glow (flat --button-bg so it stays themeable as one color) */
 .button--primary {
-  background: linear-gradient(135deg, var(--primary), #2a6bc4 55%, var(--secondary));
+  background: var(--button-bg);
   box-shadow: 0 10px 22px -8px rgba(30, 86, 160, 0.55);
 }
 
@@ -2162,4 +2172,102 @@ body::before {
   .site-nav a::after {
     transition: none;
   }
+}
+
+/* modal (checkout confirm, etc.) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.modal-box {
+  width: 100%;
+  max-width: 26rem;
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.modal-box__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.modal-box__header h3 {
+  margin: 0;
+}
+
+.modal-box__close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--muted, inherit);
+  padding: var(--space-1, 0.25rem);
+}
+
+/* ad subscription progress + status stepper */
+.progress-bar {
+  width: 100%;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--sun-soft, rgba(0, 0, 0, 0.08));
+  overflow: hidden;
+  margin-top: var(--space-2);
+}
+
+.progress-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary-strong, currentColor);
+  transition: width 0.3s ease;
+}
+
+.ad-stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
+  font-size: 0.8rem;
+}
+
+.ad-stepper__step {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted, #888);
+  opacity: 0.55;
+}
+
+.ad-stepper__step--done {
+  color: var(--primary-strong, inherit);
+  opacity: 1;
+  font-weight: 600;
+}
+
+.ad-stepper__step--rejected {
+  color: var(--coral, #d33);
+  opacity: 1;
+  font-weight: 600;
+}
+
+.ad-stepper__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: currentColor;
+  flex-shrink: 0;
 }

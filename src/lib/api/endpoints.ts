@@ -9,6 +9,8 @@ import type {
   AdCreative,
   AdPlacement,
   AdPlan,
+  AdSubmission,
+  AdSubscription,
   Announcement,
   ApiEnvelope,
   AuthResponse,
@@ -29,6 +31,7 @@ import type {
   Paginated,
   Profile,
   SellbackRequest,
+  Theme,
   UserType,
 } from "./types";
 
@@ -98,6 +101,19 @@ export const ProfileApi = {
       method: "POST",
       form,
     });
+  },
+  // themeId: null resets to the site default. Validated server-side (active themes only).
+  selectTheme(themeId: string | null) {
+    return api<ApiEnvelope<Profile>>("/profile/me/theme", {
+      method: "PATCH",
+      body: { themeId },
+    });
+  },
+};
+
+export const ThemeApi = {
+  list() {
+    return api<ApiEnvelope<Theme[]>>("/themes", { auth: false });
   },
 };
 
@@ -324,5 +340,20 @@ export const AdvertiseApi = {
         body: { planId },
       }),
     );
+  },
+  mySubscriptions() {
+    return withFeature("adPlans", () =>
+      api<ApiEnvelope<AdSubscription[]>>("/ad-subscriptions/mine"),
+    );
+  },
+  // multipart: subscriptionId, businessName, title, description, targetUrl,
+  // placement, contactPhone, contactEmail + image file.
+  createAd(form: FormData) {
+    return withFeature("ads", () =>
+      api<ApiEnvelope<AdSubmission>>("/ads", { form }),
+    );
+  },
+  myAds() {
+    return withFeature("ads", () => api<ApiEnvelope<AdSubmission[]>>("/ads/mine"));
   },
 };

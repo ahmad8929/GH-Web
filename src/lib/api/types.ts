@@ -108,6 +108,22 @@ export type AuthResponse = {
   data: AuthUser;
 };
 
+export type Theme = {
+  id: string;
+  name: string;
+  primaryColor: string;
+  secondaryColor: string;
+  backgroundColor: string;
+  textColor: string;
+  headingColor: string;
+  buttonBackground: string;
+  buttonText: string;
+  borderColor: string;
+  navbarColor: string;
+  footerColor: string;
+  isActive: boolean;
+};
+
 export type Profile = {
   id: string;
   userId: string;
@@ -122,6 +138,7 @@ export type Profile = {
   website: string | null;
   socialLinks: Record<string, string> | null;
   expertise: string[];
+  theme?: Theme | null;
 };
 
 export type MeProfile = AuthUser & {
@@ -316,4 +333,49 @@ export type AdPlan = {
   price: number;
   durationDays: number;
   description?: string;
+};
+
+export type AdSubmissionStatus = "pending" | "approved" | "rejected";
+
+export type AdSubmission = {
+  id: string;
+  businessName: string | null;
+  title: string;
+  description: string | null;
+  image: string;
+  link: string | null;
+  position: AdPlacement;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  status: AdSubmissionStatus;
+  rejectionReason: string | null;
+  subscriptionId: string;
+  createdAt: string;
+};
+
+export type AdSubscriptionStatus = "pending" | "active" | "cancelled" | "expired";
+
+export type AdSubscription = {
+  id: string;
+  planId: string;
+  status: AdSubscriptionStatus;
+  amountPaid: number | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  createdAt: string;
+  plan?: AdPlan;
+  ad?: {
+    id: string;
+    title: string;
+    businessName: string | null;
+    description: string | null;
+    image: string;
+    link: string | null;
+    position: AdPlacement;
+    contactPhone: string | null;
+    contactEmail: string | null;
+    status: AdSubmissionStatus;
+    rejectionReason: string | null;
+    createdAt: string;
+  } | null;
 };
