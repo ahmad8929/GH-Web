@@ -114,7 +114,11 @@ html {
 html,
 body {
   max-width: 100vw;
-  overflow-x: hidden;
+  /* `clip` (not `hidden`) — `overflow-x: hidden` forces the browser to treat
+     overflow-y as `auto` too, which turns body into its own scroll container
+     and silently breaks `position: sticky` on the header. `clip` prevents
+     horizontal overflow without creating a scroll container. */
+  overflow-x: clip;
 }
 
 body {
@@ -185,6 +189,7 @@ img {
   backdrop-filter: blur(18px);
   background: var(--header-bg);
   border-bottom: 1px solid var(--line);
+  transition: box-shadow 0.3s ease, background-color 0.3s ease;
 }
 
 .site-header__inner,
@@ -206,6 +211,7 @@ img {
   justify-content: space-between;
   gap: var(--space-3);
   min-height: 62px;
+  transition: min-height 0.28s ease;
 }
 
 .brand-mark {
@@ -213,24 +219,52 @@ img {
   font-family: var(--font-display), sans-serif;
   font-size: 0.95rem;
   font-weight: 700;
+  transition: font-size 0.28s ease;
 }
 
-.brand-mark span {
+.brand-mark img {
   width: 34px;
   height: 34px;
-  display: grid;
-  place-items: center;
+  display: block;
   border-radius: var(--radius-sm);
-  background: linear-gradient(145deg, var(--primary), var(--sun));
-  color: #fff;
-  font-size: 0.95rem;
-  font-weight: 700;
+  background: #fff;
+  object-fit: contain;
+  padding: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  transition: width 0.28s ease, height 0.28s ease;
+}
+
+.site-header--scrolled .site-header__inner {
+  min-height: 46px;
+}
+
+.site-header--scrolled .brand-mark {
+  font-size: 0.86rem;
+}
+
+.site-header--scrolled .brand-mark img {
+  width: 26px;
+  height: 26px;
+}
+
+.site-header--scrolled {
+  box-shadow: 0 1px 0 rgba(22, 49, 114, 0.08), 0 18px 36px -26px rgba(22, 49, 114, 0.55);
+  background: var(--surface-strong);
+}
+
+.site-header--scrolled .site-nav {
+  font-size: 0.74rem;
+}
+
+.site-header--scrolled .header-icon-link {
+  padding: 0.36rem 0.55rem;
 }
 
 .site-nav {
   gap: var(--space-3);
   font-family: var(--font-display), sans-serif;
   font-size: 0.8rem;
+  transition: font-size 0.28s ease;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -265,6 +299,13 @@ img {
   font-family: var(--font-display), sans-serif;
   font-size: 0.78rem;
   font-weight: 600;
+  transition: padding 0.28s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.header-icon-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -8px rgba(22, 49, 114, 0.35);
+  border-color: var(--line-strong);
 }
 
 .cart-count {
@@ -1729,7 +1770,7 @@ li,
   font-size: 0.82rem;
 }
 
-.brand-mark--footer span {
+.brand-mark--footer img {
   box-shadow: none;
 }
 

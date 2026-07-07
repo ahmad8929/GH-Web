@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { AdSlot } from "@/components/ad-slot";
 import { Catalog } from "@/components/catalog";
 import { PageHero } from "@/components/page-hero";
 import { ListingsApi } from "@/lib/api/endpoints";
@@ -46,6 +47,7 @@ export default async function MarketplacePage({
         secondaryHref="/donate"
         secondaryLabel="Donate"
       />
+      <AdSlot placement="category" />
       <Catalog
         initial={initial}
         categoryOptions={categoryOptions}

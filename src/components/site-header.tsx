@@ -26,6 +26,7 @@ export function SiteHeader() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [scrolled, setScrolled] = useState(false);
 
   // Close the account menu on outside click.
   useEffect(() => {
@@ -37,16 +38,26 @@ export function SiteHeader() {
     return () => document.removeEventListener("mousedown", onClick);
   }, [menuOpen]);
 
+  // Shrink the header once the page has scrolled past the hero; it expands
+  // back to full size as soon as the user scrolls back near the top.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const onLogout = () => {
     logout();
     router.push("/");
   };
 
   return (
-    <header className="site-header">
+    <header className={`site-header ${scrolled ? "site-header--scrolled" : ""}`}>
       <div className="container site-header__inner">
         <Link href="/" className="brand-mark">
-          <span aria-hidden>G</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-mark.png" alt="" aria-hidden />
           <strong>Gyan Hub</strong>
         </Link>
 

@@ -38,7 +38,8 @@ export function SiteFooter() {
       <div className="container site-footer__grid">
         <div className="footer-intro">
           <div className="brand-mark brand-mark--footer">
-            <span aria-hidden>G</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-mark.png" alt="" aria-hidden />
             <strong>Gyan Hub</strong>
           </div>
           <p>The friendly school store — buy, reuse, donate.</p>

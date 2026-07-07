@@ -308,7 +308,15 @@ export type AdCreative = {
   targetUrl: string;
 };
 
-export type AdPlacement = "home_top" | "home_mid" | "sidebar";
+export type AdPlacement =
+  | "home_top"
+  | "home_mid"
+  | "category"
+  | "sidebar"
+  | "listing_detail"
+  | "cart"
+  | "order_success"
+  | "account";
 
 export type NotebookTemplate = {
   id: string;

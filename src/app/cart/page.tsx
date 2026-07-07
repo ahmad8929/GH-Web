@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
+import { AdSlot } from "@/components/ad-slot";
 import { EmptyState } from "@/components/empty-state";
 import { useAuth } from "@/context/auth-context";
 import { useCart, type CartLine } from "@/context/cart-context";
@@ -116,6 +117,8 @@ export default function CartPage() {
           so there are no quantities to juggle.
         </p>
       </section>
+
+      <AdSlot placement="cart" />
 
       {loading ? (
         <div className="panel" aria-busy>

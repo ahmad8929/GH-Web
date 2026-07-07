@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { AdSlot } from "@/components/ad-slot";
 import { EmptyState } from "@/components/empty-state";
 import { OrdersApi } from "@/lib/api/endpoints";
 import type { Order } from "@/lib/api/types";
@@ -132,6 +133,8 @@ export default function OrderConfirmationPage() {
           Keep shopping
         </Link>
       </div>
+
+      <AdSlot placement="order_success" />
     </div>
   );
 }

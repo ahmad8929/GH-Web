@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
+import { AdSlot } from "@/components/ad-slot";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { ProfileApi } from "@/lib/api/endpoints";
@@ -139,6 +140,8 @@ export default function DashboardProfilePage() {
           />
         </div>
       </section>
+
+      <AdSlot placement="account" />
 
       <form className="panel" onSubmit={onSave}>
         <h3>Profile details</h3>

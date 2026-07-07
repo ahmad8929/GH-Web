@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { AdSlot } from "@/components/ad-slot";
 import { FavoriteButton } from "@/components/favorite-button";
 import { Gallery } from "@/components/gallery";
 import { ProductCard } from "@/components/product-card";
@@ -164,6 +165,7 @@ export default async function ListingDetailPage({
               before it goes live.
             </p>
           </div>
+          <AdSlot placement="sidebar" />
         </aside>
       </section>
 
@@ -177,6 +179,8 @@ export default async function ListingDetailPage({
           </div>
         </section>
       ) : null}
+
+      <AdSlot placement="listing_detail" />
 
       <p>
         <Link href="/marketplace" className="text-link text-link--strong">
