@@ -12,7 +12,7 @@ export type ShopCategory = {
   slug: string;
   label: string;
   blurb: string;
-  tone: "books" | "uniforms" | "stationery" | "notebook" | "devices";
+  tone: "books" | "uniforms" | "stationery" | "notebook" | "devices" | "corporate";
   href: string;
   emoji: string;
   /** lowercase fragments matched against real category slug/name */
@@ -64,6 +64,15 @@ export const SHOP_CATEGORIES: ShopCategory[] = [
     href: "/custom-notebook",
     emoji: "📒",
     hints: ["custom", "notebook"],
+  },
+  {
+    slug: "corporate",
+    label: "Corporate Bulk",
+    blurb: "Bulk pricing tiers for offices, schools, and institutions.",
+    tone: "corporate",
+    href: "/marketplace?cat=corporate",
+    emoji: "🏢",
+    hints: ["corporate", "bulk"],
   },
 ];
 

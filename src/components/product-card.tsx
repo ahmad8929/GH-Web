@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FavoriteButton } from "@/components/favorite-button";
 import type { Listing } from "@/lib/api/types";
 import { CONDITION_LABELS, LISTING_TYPE_LABELS, inr } from "@/lib/format";
+import { lowestUnitPrice } from "@/lib/pricing";
 import { listingPath } from "@/lib/slug";
 
 type ProductCardProps = {
@@ -41,14 +42,22 @@ export function ProductCard({ listing }: ProductCardProps) {
       <div className="product-card__body">
         <div className="product-card__price-row">
           <strong>
-            {inr(listing.price)}{" "}
-            {listing.originalPrice &&
-            Number(listing.originalPrice) > Number(listing.price ?? 0) ? (
-              <span className="price-strike">{inr(listing.originalPrice)}</span>
-            ) : null}
+            {listing.isBulk ? (
+              <>From {inr(lowestUnitPrice(listing))}/unit</>
+            ) : (
+              <>
+                {inr(listing.price)}{" "}
+                {listing.originalPrice &&
+                Number(listing.originalPrice) > Number(listing.price ?? 0) ? (
+                  <span className="price-strike">{inr(listing.originalPrice)}</span>
+                ) : null}
+              </>
+            )}
           </strong>
           {listing.isFeatured ? (
             <span className="badge badge--sun">★ Featured</span>
+          ) : listing.isBulk ? (
+            <span className="badge">MOQ {listing.moq}</span>
           ) : null}
         </div>
         <h3>

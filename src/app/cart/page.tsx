@@ -11,10 +11,11 @@ import { useCart, type CartLine } from "@/context/cart-context";
 import { useToast } from "@/context/toast-context";
 import { ApiError } from "@/lib/api/http";
 import { CONDITION_LABELS, inr } from "@/lib/format";
+import { lineTotalFor } from "@/lib/pricing";
 import { listingPath } from "@/lib/slug";
 
 function CartLineRow({ line }: { line: CartLine }) {
-  const { remove } = useCart();
+  const { remove, setQuantity } = useCart();
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
 
@@ -32,7 +33,21 @@ function CartLineRow({ line }: { line: CartLine }) {
     }
   };
 
-  const { listing } = line;
+  const onQuantity = async (next: number) => {
+    setBusy(true);
+    try {
+      await setQuantity(line, next);
+    } catch (err) {
+      toast(
+        err instanceof ApiError ? err.message : "Could not update quantity",
+        "error",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const { listing, quantity } = line;
   return (
     <div className="cart-line">
       <div className="cart-line__thumb">
@@ -52,8 +67,27 @@ function CartLineRow({ line }: { line: CartLine }) {
           {listing.grade ? ` · ${listing.grade}` : ""}
           {listing.city ? ` · ${listing.city}` : ""}
         </span>
+        {listing.isBulk ? (
+          <div className="quantity-stepper" role="group" aria-label="Quantity">
+            <button
+              type="button"
+              onClick={() => onQuantity(quantity - 1)}
+              disabled={busy || quantity <= (listing.moq || 1)}
+            >
+              −
+            </button>
+            <span>{quantity}</span>
+            <button
+              type="button"
+              onClick={() => onQuantity(quantity + 1)}
+              disabled={busy || (listing.stock != null && quantity >= listing.stock)}
+            >
+              +
+            </button>
+          </div>
+        ) : null}
       </div>
-      <strong>{inr(listing.price)}</strong>
+      <strong>{inr(lineTotalFor(listing, quantity))}</strong>
       <button
         type="button"
         className="button button--ghost button--small"
@@ -113,8 +147,8 @@ export default function CartPage() {
         <span className="eyebrow">Cart</span>
         <h1>Your cart</h1>
         <p>
-          School items here are one-of-a-kind — each listing is a single item,
-          so there are no quantities to juggle.
+          Most items here are one-of-a-kind. Corporate bulk items can carry a
+          quantity — adjust it right on the line.
         </p>
       </section>
 

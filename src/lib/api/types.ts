@@ -59,7 +59,17 @@ export type Listing = {
   seller?: SellerRef | null;
   category?: CategoryRef | null;
   school?: SchoolRef | null;
+
+  // Corporate/bulk catalog: restockable products sold in quantity, with an
+  // optional minimum order quantity and per-quantity price tiers.
+  isBulk: boolean;
+  moq: number;
+  stock: number | null;
+  priceTiers: PriceTier[] | null;
 };
+
+/** [{ minQty: 100, unitPrice: 4.5 }, ...], sorted ascending by minQty. */
+export type PriceTier = { minQty: number; unitPrice: number };
 
 export type ListingQuery = {
   search?: string;
@@ -151,6 +161,7 @@ export type CartItemApi = {
   id: string;
   userId: string;
   listingId: string;
+  quantity: number;
   createdAt: string;
   listing: Listing;
 };
@@ -189,6 +200,7 @@ export type OrderItem = {
   orderId: string;
   listingId: string;
   sellerId: string;
+  quantity: number;
   price: string;
   discountAmount: string;
   finalAmount: string;
@@ -333,6 +345,33 @@ export type NotebookConfig = {
   ruling: "ruled" | "plain" | "grid" | "dotted";
   binding: "spiral" | "stitched" | "hardbound";
   nameOnCover: string;
+};
+
+export type CustomNotebookOrderStatus =
+  | "pending"
+  | "confirmed"
+  | "in_production"
+  | "shipped"
+  | "delivered"
+  | "cancelled";
+
+export type CustomNotebookOrder = {
+  id: string;
+  userId: string;
+  templateId: string | null;
+  coverColor: string | null;
+  ruling: "ruled" | "plain" | "grid" | "dotted";
+  binding: "spiral" | "stitched" | "hardbound";
+  pages: number;
+  nameOnCover: string | null;
+  price: string;
+  contactName: string | null;
+  contactPhone: string;
+  address: string;
+  city: string;
+  pincode: string | null;
+  status: CustomNotebookOrderStatus;
+  createdAt: string;
 };
 
 export type AdPlan = {

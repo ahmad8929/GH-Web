@@ -19,6 +19,7 @@ import type {
   CartData,
   CartItemApi,
   CouponValidation,
+  CustomNotebookOrder,
   DeliveryAddress,
   FavoriteApi,
   Listing,
@@ -164,8 +165,17 @@ export const CartApi = {
   get() {
     return api<ApiEnvelope<CartData>>("/cart");
   },
-  add(listingId: string) {
-    return api<ApiEnvelope<CartItemApi>>("/cart", { body: { listingId } });
+  add(listingId: string, quantity?: number) {
+    return api<ApiEnvelope<CartItemApi>>("/cart", {
+      body: { listingId, ...(quantity !== undefined ? { quantity } : {}) },
+    });
+  },
+  /** quantity: 0 removes the line. Only meaningful for bulk listings. */
+  setQuantity(cartItemId: string, quantity: number) {
+    return api<ApiEnvelope<CartItemApi | null>>(`/cart/items/${cartItemId}`, {
+      method: "PATCH",
+      body: { quantity },
+    });
   },
   removeItem(cartItemId: string) {
     return api<ApiEnvelope<null>>(`/cart/items/${cartItemId}`, {
@@ -317,6 +327,19 @@ export const NotebooksApi = {
         auth: false,
       }),
     );
+  },
+  // multipart: templateId, coverColor, ruling, binding, pages, nameOnCover,
+  // price, contactName, contactPhone, address, city, pincode.
+  order(form: FormData) {
+    return api<ApiEnvelope<CustomNotebookOrder>>("/custom-notebooks/orders", {
+      method: "POST",
+      form,
+    });
+  },
+  mine(query: { page?: number; limit?: number } = {}) {
+    return api<Paginated<CustomNotebookOrder>>("/custom-notebooks/orders/mine", {
+      query,
+    });
   },
 };
 

@@ -15,13 +15,15 @@ import { useAuth } from "@/context/auth-context";
 import { CartApi, CouponsApi } from "@/lib/api/endpoints";
 import { ApiError } from "@/lib/api/http";
 import type { CouponValidation, Listing } from "@/lib/api/types";
+import { clampQuantity, lineTotalFor } from "@/lib/pricing";
 
 /**
  * Cart model notes:
- * - Every listing is a unique physical item, and the backend CartItem has no
- *   quantity column — one row per listing, so there are no quantity steppers.
- * - Guests keep a local cart (listing snapshots in localStorage); it is merged
- *   into the server cart right after login/signup.
+ * - Most listings are unique physical items (quantity is always 1). Corporate
+ *   bulk listings (`listing.isBulk`) are restockable and carry a real
+ *   quantity, clamped to the listing's MOQ/stock — see `lib/pricing.ts`.
+ * - Guests keep a local cart (listing snapshots + quantity in localStorage);
+ *   it is merged into the server cart right after login/signup.
  */
 
 export type CartLine = {
@@ -29,7 +31,10 @@ export type CartLine = {
   /** present only for server-backed lines */
   serverId?: string;
   listing: Listing;
+  quantity: number;
 };
+
+type GuestCartEntry = { listing: Listing; quantity: number };
 
 type CartContextValue = {
   lines: CartLine[];
@@ -38,7 +43,8 @@ type CartContextValue = {
   loading: boolean;
   coupon: CouponValidation | null;
   inCart(listingId: string): boolean;
-  add(listing: Listing): Promise<void>;
+  add(listing: Listing, quantity?: number): Promise<void>;
+  setQuantity(line: CartLine, quantity: number): Promise<void>;
   remove(line: CartLine): Promise<void>;
   clear(): Promise<void>;
   applyCoupon(code: string): Promise<CouponValidation>;
@@ -51,17 +57,23 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 const GUEST_KEY = "gh.cart";
 
-function readGuestCart(): Listing[] {
+function readGuestCart(): GuestCartEntry[] {
   try {
     const raw = window.localStorage.getItem(GUEST_KEY);
-    return raw ? (JSON.parse(raw) as Listing[]) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as (Listing | GuestCartEntry)[];
+    return parsed.map((entry) =>
+      "listing" in entry
+        ? entry
+        : { listing: entry, quantity: clampQuantity(entry, 1) },
+    );
   } catch {
     return [];
   }
 }
 
-function writeGuestCart(listings: Listing[]) {
-  window.localStorage.setItem(GUEST_KEY, JSON.stringify(listings));
+function writeGuestCart(entries: GuestCartEntry[]) {
+  window.localStorage.setItem(GUEST_KEY, JSON.stringify(entries));
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -78,15 +90,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
         key: item.id,
         serverId: item.id,
         listing: item.listing,
+        quantity: item.quantity,
       })),
     );
   }, []);
 
   const loadGuestCart = useCallback(() => {
     setLines(
-      readGuestCart().map((listing) => ({
+      readGuestCart().map(({ listing, quantity }) => ({
         key: `local:${listing.id}`,
         listing,
+        quantity,
       })),
     );
   }, []);
@@ -103,9 +117,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
           const guest = readGuestCart();
           if (guest.length && mergedForUser.current !== user.id) {
             mergedForUser.current = user.id;
-            for (const listing of guest) {
+            for (const { listing, quantity } of guest) {
               try {
-                await CartApi.add(listing.id);
+                await CartApi.add(listing.id, quantity);
               } catch {
                 // already in cart / own listing / no longer available
               }
@@ -134,11 +148,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   const add = useCallback(
-    async (listing: Listing) => {
+    async (listing: Listing, quantity?: number) => {
       setCoupon(null);
+      const qty = clampQuantity(listing, quantity ?? listing.moq ?? 1);
       if (user) {
         try {
-          await CartApi.add(listing.id);
+          await CartApi.add(listing.id, qty);
         } catch (err) {
           // Treat "already in cart" as success so the UI stays friendly.
           if (!(err instanceof ApiError && err.status === 409)) throw err;
@@ -146,13 +161,41 @@ export function CartProvider({ children }: { children: ReactNode }) {
         await loadServerCart();
       } else {
         const guest = readGuestCart();
-        if (!guest.some((item) => item.id === listing.id)) {
-          writeGuestCart([...guest, listing]);
-        }
+        const existing = guest.find((item) => item.listing.id === listing.id);
+        const next = existing
+          ? guest.map((item) =>
+              item.listing.id === listing.id
+                ? { listing, quantity: clampQuantity(listing, item.quantity + qty) }
+                : item,
+            )
+          : [...guest, { listing, quantity: qty }];
+        writeGuestCart(next);
         loadGuestCart();
       }
     },
     [user, loadServerCart, loadGuestCart],
+  );
+
+  const setQuantity = useCallback(
+    async (line: CartLine, quantity: number) => {
+      setCoupon(null);
+      if (line.serverId) {
+        await CartApi.setQuantity(line.serverId, quantity);
+        await loadServerCart();
+      } else {
+        const next =
+          quantity <= 0
+            ? readGuestCart().filter((item) => item.listing.id !== line.listing.id)
+            : readGuestCart().map((item) =>
+                item.listing.id === line.listing.id
+                  ? { listing: item.listing, quantity: clampQuantity(item.listing, quantity) }
+                  : item,
+              );
+        writeGuestCart(next);
+        loadGuestCart();
+      }
+    },
+    [loadServerCart, loadGuestCart],
   );
 
   const remove = useCallback(
@@ -163,7 +206,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         await loadServerCart();
       } else {
         writeGuestCart(
-          readGuestCart().filter((item) => item.id !== line.listing.id),
+          readGuestCart().filter((item) => item.listing.id !== line.listing.id),
         );
         loadGuestCart();
       }
@@ -205,7 +248,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const subtotal = useMemo(
     () =>
-      lines.reduce((sum, line) => sum + Number(line.listing.price || 0), 0),
+      Math.round(
+        lines.reduce(
+          (sum, line) => sum + lineTotalFor(line.listing, line.quantity),
+          0,
+        ) * 100,
+      ) / 100,
     [lines],
   );
 
@@ -218,6 +266,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       coupon,
       inCart,
       add,
+      setQuantity,
       remove,
       clear,
       applyCoupon,
@@ -231,6 +280,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       coupon,
       inCart,
       add,
+      setQuantity,
       remove,
       clear,
       applyCoupon,

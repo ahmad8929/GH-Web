@@ -1,8 +1,13 @@
 "use client";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+import { useAuth } from "@/context/auth-context";
+import { useToast } from "@/context/toast-context";
 import { NotebooksApi } from "@/lib/api/endpoints";
+import { ApiError } from "@/lib/api/http";
 import type { NotebookTemplate } from "@/lib/api/types";
 import { inr } from "@/lib/format";
 
@@ -35,6 +40,10 @@ const PAGE_OPTIONS = [80, 120, 160, 200];
 const DRAFT_KEY = "gh.notebook-draft";
 
 export default function CustomNotebookPage() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const router = useRouter();
+
   const [templates, setTemplates] = useState<NotebookTemplate[]>(FALLBACK_TEMPLATES);
   const [orderingLive, setOrderingLive] = useState(false);
 
@@ -45,6 +54,14 @@ export default function CustomNotebookPage() {
   const [binding, setBinding] = useState<(typeof BINDINGS)[number]>("spiral");
   const [nameOnCover, setNameOnCover] = useState("");
   const [saved, setSaved] = useState(false);
+
+  const [contactName, setContactName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [placed, setPlaced] = useState(false);
 
   // Probe the contract-first endpoint; use real templates when they exist.
   useEffect(() => {
@@ -98,6 +115,47 @@ export default function CustomNotebookPage() {
     );
     setSaved(true);
     window.setTimeout(() => setSaved(false), 2500);
+  };
+
+  const deliveryValid = contactPhone.trim() && address.trim() && city.trim();
+
+  const placeOrder = async () => {
+    if (!user) {
+      router.push("/login?next=/custom-notebook");
+      return;
+    }
+    if (!deliveryValid) {
+      toast("Phone, address, and city are required to place the order", "error");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const form = new FormData();
+      form.append("templateId", templateId);
+      form.append("coverColor", coverColor);
+      form.append("ruling", ruling);
+      form.append("binding", binding);
+      form.append("pages", String(pages));
+      if (nameOnCover.trim()) form.append("nameOnCover", nameOnCover.trim());
+      form.append("price", String(price));
+      if (contactName.trim()) form.append("contactName", contactName.trim());
+      form.append("contactPhone", contactPhone.trim());
+      form.append("address", address.trim());
+      form.append("city", city.trim());
+      if (pincode.trim()) form.append("pincode", pincode.trim());
+
+      await NotebooksApi.order(form);
+      window.localStorage.removeItem(DRAFT_KEY);
+      setPlaced(true);
+      toast("Notebook order placed. We will confirm it shortly.", "success");
+    } catch (err) {
+      toast(
+        err instanceof ApiError ? err.message : "Could not place the order",
+        "error",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -218,14 +276,80 @@ export default function CustomNotebookPage() {
             </div>
           </section>
 
+          {orderingLive && !placed ? (
+            <section className="panel">
+              <h3>5 · Delivery details</h3>
+              <div className="field">
+                <label htmlFor="nb-contact-name">Your name</label>
+                <input
+                  id="nb-contact-name"
+                  value={contactName}
+                  onChange={(e) => setContactName(e.target.value)}
+                  placeholder="e.g. Aarav Sharma"
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="nb-phone">Phone *</label>
+                <input
+                  id="nb-phone"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  placeholder="10-digit mobile number"
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="nb-address">Address *</label>
+                <input
+                  id="nb-address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="House no., street, area"
+                />
+              </div>
+              <div className="choice-row">
+                <div className="field">
+                  <label htmlFor="nb-city">City *</label>
+                  <input
+                    id="nb-city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="City"
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="nb-pincode">Pincode</label>
+                  <input
+                    id="nb-pincode"
+                    value={pincode}
+                    onChange={(e) => setPincode(e.target.value)}
+                    placeholder="Pincode"
+                  />
+                </div>
+              </div>
+            </section>
+          ) : null}
+
           <section className="cart-summary">
             <div className="summary-row summary-row--total">
               <span>Your notebook</span>
               <strong>{inr(price)}</strong>
             </div>
-            {orderingLive ? (
-              <button type="button" className="button button--primary button--full">
-                Add to cart
+            {placed ? (
+              <div className="form-alert form-alert--success">
+                Order placed! We will confirm it shortly. Track it from{" "}
+                <Link href="/dashboard" className="text-link text-link--strong">
+                  My account
+                </Link>
+                .
+              </div>
+            ) : orderingLive ? (
+              <button
+                type="button"
+                className="button button--primary button--full"
+                onClick={placeOrder}
+                disabled={submitting || !deliveryValid}
+              >
+                {submitting ? "Placing order…" : "Place order"}
               </button>
             ) : (
               <>

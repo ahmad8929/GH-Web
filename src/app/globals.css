@@ -836,6 +836,10 @@ li,
   background: linear-gradient(180deg, var(--surface-strong), var(--mint-soft));
 }
 
+.category-card[data-tone="corporate"] {
+  background: linear-gradient(180deg, var(--surface-strong), var(--primary-soft));
+}
+
 /* ============================ product card ============================ */
 
 .product-card {
@@ -1200,6 +1204,62 @@ li,
 
 .button-row--spaced {
   padding-top: var(--space-3);
+}
+
+/* corporate bulk: quantity stepper + tier pricing */
+.bulk-add {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.bulk-add--full {
+  width: 100%;
+}
+
+.quantity-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  padding: 0.25rem;
+}
+
+.quantity-stepper button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-strong);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.quantity-stepper button:disabled {
+  opacity: 0.4;
+}
+
+.quantity-stepper span {
+  min-width: 2ch;
+  text-align: center;
+  font-weight: 700;
+}
+
+.tier-table {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-2) 0;
+}
+
+.tier-table__row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-strong);
+  font-size: 0.85rem;
 }
 
 .coupon-row {
@@ -2185,6 +2245,10 @@ body::before {
 
 .category-card[data-tone="notebook"]::before {
   background: rgba(255, 111, 97, 0.13);
+}
+
+.category-card[data-tone="corporate"]::before {
+  background: rgba(30, 86, 160, 0.14);
 }
 
 /* product card sale/label pill: a touch of depth */

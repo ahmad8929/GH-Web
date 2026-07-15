@@ -143,6 +143,24 @@ export default async function ListingDetailPage({
             {discount ? (
               <span className="badge badge--mint">{discount}% off</span>
             ) : null}
+            {listing.isBulk ? (
+              <div className="section-stack">
+                <span className="muted-copy">
+                  MOQ {listing.moq} units
+                  {listing.stock != null ? ` · ${listing.stock} in stock` : ""}
+                </span>
+                {listing.priceTiers?.length ? (
+                  <div className="tier-table">
+                    {listing.priceTiers.map((tier) => (
+                      <div className="tier-table__row" key={tier.minQty}>
+                        <span>{tier.minQty}+ units</span>
+                        <strong>{inr(tier.unitPrice)}/unit</strong>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
             <div className="section-stack">
               <AddToCartButton listing={listing} full />
               <Link href="/cart" className="button button--ghost button--full">

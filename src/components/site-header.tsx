@@ -14,6 +14,7 @@ const navLinks = [
   { href: "/uniforms", label: "Uniforms" },
   { href: "/stationery", label: "Stationery" },
   { href: "/custom-notebook", label: "Custom Notebook" },
+  { href: "/marketplace?cat=corporate", label: "Corporate Bulk" },
   { href: "/blogs", label: "Blog" },
   { href: "/sell", label: "Sell" },
   { href: "/donate", label: "Donate" },
